@@ -233,52 +233,7 @@ internal fun Aw11MediaPanel(
                                 )
                                 Spacer(Modifier.height(1.dp))
 
-                                //controls
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    //previous
-                                    Box(
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .clickable(enabled = canSkipPrevious) { onPrev() },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "⏮",
-                                            color = if (canSkipPrevious) Aw11Secondary else Aw11Dim,
-                                            fontSize = 17.sp
-                                        )
-                                    }
-                                    //play
-                                    Box(
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .clickable(enabled = canPlayPause) { onPlayPause() },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = if (nowPlaying.isPlaying) "Ⅱ" else "▶",
-                                            color = if (canPlayPause) Aw11Primary else Aw11Dim,
-                                            fontSize = 18.sp,
-                                            modifier = Modifier.offset(y = 2.dp)
-                                        )
-                                    }
-                                    //next
-                                    Box(
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .clickable(enabled = canSkipNext) { onNext() },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "⏭",
-                                            color = if (canSkipNext) Aw11Secondary else Aw11Dim,
-                                            fontSize = 17.sp
-                                        )
-                                    }
-                                }
+
                             }
 
                             val retroAlbumArt = remember(nowPlaying.albumArt) {
@@ -400,6 +355,112 @@ internal fun Aw11MediaPanel(
                                 .fillMaxWidth()
                                 .height(22.dp)
                         )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            // Previous
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (canSkipPrevious) {
+                                            Aw11Border.copy(alpha = 0.65f)
+                                        } else {
+                                            Aw11Dim.copy(alpha = 0.35f)
+                                        }
+                                    )
+                                    .clickable(
+                                        enabled = canSkipPrevious
+                                    ) {
+                                        onPrev()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "⏮",
+                                    color = if (canSkipPrevious) {
+                                        Aw11Secondary
+                                    } else {
+                                        Aw11Dim
+                                    },
+                                    fontSize = 22.sp
+                                )
+                            }
+
+                            // Play / Pause
+                            Box(
+                                modifier = Modifier
+                                    .weight(1.15f)
+                                    .height(52.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (canPlayPause) {
+                                            Aw11Primary
+                                        } else {
+                                            Aw11Dim.copy(alpha = 0.35f)
+                                        }
+                                    )
+                                    .clickable(
+                                        enabled = canPlayPause
+                                    ) {
+                                        onPlayPause()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (nowPlaying.isPlaying) {
+                                        "Ⅱ"
+                                    } else {
+                                        "▶"
+                                    },
+                                    color = if (canPlayPause) {
+                                        Aw11Primary
+                                    } else {
+                                        Aw11Dim
+                                    },
+                                    fontSize = 25.sp
+                                )
+                            }
+
+                            // Next
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (canSkipNext) {
+                                            Aw11Border.copy(alpha = 0.65f)
+                                        } else {
+                                            Aw11Dim.copy(alpha = 0.35f)
+                                        }
+                                    )
+                                    .clickable(
+                                        enabled = canSkipNext
+                                    ) {
+                                        onNext()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "⏭",
+                                    color = if (canSkipNext) {
+                                        Aw11Secondary
+                                    } else {
+                                        Aw11Dim
+                                    },
+                                    fontSize = 22.sp
+                                )
+                            }
+                        }
 
 
                     }
