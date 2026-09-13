@@ -89,7 +89,7 @@ fun Aw11GuidanceHeader(
             secondaryValue =
                 "$durationMinutes MIN",
             modifier = Modifier
-                .weight(0.22f)
+                .weight(0.18f)
                 .fillMaxHeight()
         )
 
@@ -110,7 +110,7 @@ fun Aw11GuidanceHeader(
         // NEXT MANEUVER
         Row(
             modifier = Modifier
-                .weight(0.55f)
+                .weight(0.59f)
                 .fillMaxHeight()
                 .padding(start = 12.dp),
             verticalAlignment =
@@ -121,6 +121,8 @@ fun Aw11GuidanceHeader(
                 Aw11ManeuverIcon(
                     actionName =
                         guidance.actionName,
+                    roundaboutAngleDegrees =
+                        guidance.roundaboutAngleDegrees,
                     modifier = Modifier
                         .size(66.dp)
                 )
@@ -151,7 +153,9 @@ fun Aw11GuidanceHeader(
                                 ),
                             color = Aw11Primary,
                             fontSize = 22.sp,
-                            letterSpacing = 0.5.sp
+                            letterSpacing = 0.5.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
 

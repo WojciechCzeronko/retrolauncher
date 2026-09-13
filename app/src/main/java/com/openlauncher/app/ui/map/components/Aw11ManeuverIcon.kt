@@ -8,16 +8,19 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import com.openlauncher.app.R
 import com.openlauncher.app.ui.theme.Aw11Primary
+import kotlin.math.abs
 
 @Composable
 fun Aw11ManeuverIcon(
     actionName: String,
+    roundaboutAngleDegrees: Double? = null,
     modifier: Modifier = Modifier
 ) {
     Image(
         painter = painterResource(
             id = maneuverIconResource(
-                actionName
+                actionName = actionName,
+                roundaboutAngleDegrees = roundaboutAngleDegrees
             )
         ),
         contentDescription = null,
@@ -30,7 +33,8 @@ fun Aw11ManeuverIcon(
 
 @DrawableRes
 private fun maneuverIconResource(
-    actionName: String
+    actionName: String,
+    roundaboutAngleDegrees: Double?
 ): Int {
     return when {
         actionName == "ARRIVE" ->
@@ -40,7 +44,9 @@ private fun maneuverIconResource(
             "ROUNDABOUT"
         ) ->
             roundaboutIconResource(
-                actionName
+                actionName = actionName,
+                roundaboutAngleDegrees =
+                    roundaboutAngleDegrees
             )
 
         actionName == "SLIGHT_LEFT_TURN" ->
@@ -110,8 +116,32 @@ private fun maneuverIconResource(
 
 @DrawableRes
 private fun roundaboutIconResource(
-    actionName: String
+    actionName: String,
+    roundaboutAngleDegrees: Double?
 ): Int {
+
+    if (roundaboutAngleDegrees != null) {
+
+        val angle =
+            abs(roundaboutAngleDegrees)
+
+        val rightDriving =
+            roundaboutAngleDegrees >= 0.0
+
+        return when {
+            angle < -45.0 ->
+                R.drawable.ic_maneuver_roundabout_left
+
+            angle > 45.0 ->
+                R.drawable.ic_maneuver_roundabout_right
+
+            else ->
+                R.drawable.ic_maneuver_roundabout_straight
+        }
+    }
+
+    // Fallback for maneuvers where HERE does not provide
+    // a roundabout angle.
     val exitNumber =
         actionName
             .substringAfter(
