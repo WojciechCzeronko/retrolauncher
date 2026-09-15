@@ -1876,11 +1876,98 @@ fun Aw11HereMap(
                                             )
                                         )
 
-                                        visibleResults.forEach { result ->
-                                            add(
-                                                result.coordinates
+                                        addAll(
+                                            visibleResults.map {
+                                                it.coordinates
+                                            }
+                                        )
+                                    }
+
+                                val reservedLeftPx =
+                                    with(density) {
+                                        SEARCH_RESULTS_RESERVED_LEFT_DP
+                                            .dp
+                                            .toPx()
+                                            .toDouble()
+                                    }
+
+                                val paddingPx =
+                                    with(density) {
+                                        SEARCH_RESULTS_PADDING_DP
+                                            .dp
+                                            .toPx()
+                                            .toDouble()
+                                    }
+
+                                cameraController.showSearchResults(
+                                    coordinates =
+                                        searchCoordinates,
+                                    width =
+                                        state.mapSize.width,
+                                    height =
+                                        state.mapSize.height,
+                                    reservedLeftPx =
+                                        reservedLeftPx,
+                                    paddingPx =
+                                        paddingPx
+                                )
+                            }
+                        },
+                        onError = { error ->
+                            state.failSearch(
+                                error.name
+                            )
+                        }
+                    )
+                },
+                onNearbySearch = { category ->
+
+                    state.searchQuery = ""
+
+                    searchPinRenderer.clear()
+                    state.startSearch()
+
+                    val center =
+                        GeoCoordinates(
+                            animationState.latitude,
+                            animationState.longitude
+                        )
+
+                    searchController.searchNearby(
+                        category = category,
+                        center = center,
+                        onSuccess = { results ->
+
+                            val visibleResults =
+                                results.take(
+                                    MAX_NUMBER_OF_SEARCH_RESULTS
+                                )
+
+                            state.completeSearch(
+                                visibleResults
+                            )
+
+                            searchPinRenderer.showResults(
+                                visibleResults
+                            )
+
+                            if (visibleResults.isNotEmpty()) {
+                                state.isFollowing = false
+
+                                val searchCoordinates =
+                                    buildList {
+                                        add(
+                                            GeoCoordinates(
+                                                animationState.latitude,
+                                                animationState.longitude
                                             )
-                                        }
+                                        )
+
+                                        addAll(
+                                            visibleResults.map {
+                                                it.coordinates
+                                            }
+                                        )
                                     }
 
                                 val reservedLeftPx =

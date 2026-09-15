@@ -1,5 +1,14 @@
 package com.openlauncher.app.ui.map.components
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,53 +18,44 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.openlauncher.app.ui.map.HereSearchResult
-import com.openlauncher.app.ui.theme.Aw11Background
-import com.openlauncher.app.ui.theme.Aw11Primary
-import com.openlauncher.app.ui.theme.Aw11Secondary
-import java.util.Locale
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.ui.graphics.SolidColor
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Bundle
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
-
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.openlauncher.app.ui.map.HereNearbyCategory
+import com.openlauncher.app.ui.map.HereSearchResult
+import com.openlauncher.app.ui.theme.Aw11Background
+import com.openlauncher.app.ui.theme.Aw11Primary
+import com.openlauncher.app.ui.theme.Aw11Secondary
+import java.util.Locale
 
 @Composable
 fun Aw11SearchPanel(
@@ -68,6 +68,7 @@ fun Aw11SearchPanel(
     onOpen: () -> Unit,
     onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
+    onNearbySearch: (HereNearbyCategory) -> Unit,
     onClear: () -> Unit,
     onClose: () -> Unit,
     onResultSelected: (HereSearchResult) -> Unit,
@@ -282,6 +283,19 @@ fun Aw11SearchPanel(
         keyboardController?.hide()
 
         onSearch(query)
+    }
+
+    fun triggerNearbySearch(
+        category: HereNearbyCategory
+    ) {
+        if (isSearching) {
+            return
+        }
+
+        focusManager.clearFocus()
+        keyboardController?.hide()
+
+        onNearbySearch(category)
     }
     if (!isOpen) {
         if (!showOpenButton) {
@@ -551,6 +565,88 @@ fun Aw11SearchPanel(
             }
         }
 
+        if (query.isBlank()) {
+
+            Spacer(
+                Modifier.height(10.dp)
+            )
+
+            Text(
+                text = "NEARBY",
+                color = Aw11Secondary,
+                fontSize = 9.sp,
+                letterSpacing = 1.sp
+            )
+
+            Spacer(
+                Modifier.height(5.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                NearbyCategoryButton(
+                    label = "FUEL",
+                    enabled = !isSearching,
+                    onClick = {
+                        triggerNearbySearch(
+                            HereNearbyCategory.FUEL
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(
+                    Modifier.width(6.dp)
+                )
+
+                NearbyCategoryButton(
+                    label = "PARKING",
+                    enabled = !isSearching,
+                    onClick = {
+                        triggerNearbySearch(
+                            HereNearbyCategory.PARKING
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(
+                Modifier.height(6.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                NearbyCategoryButton(
+                    label = "FOOD",
+                    enabled = !isSearching,
+                    onClick = {
+                        triggerNearbySearch(
+                            HereNearbyCategory.FOOD
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(
+                    Modifier.width(6.dp)
+                )
+
+                NearbyCategoryButton(
+                    label = "SHOPPING",
+                    enabled = !isSearching,
+                    onClick = {
+                        triggerNearbySearch(
+                            HereNearbyCategory.SHOPPING
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
         if (isSearching) {
             Text(
                 text = "SEARCHING...",
@@ -665,6 +761,50 @@ private fun formatDistance(
             Locale.US,
             "%.1f KM",
             distanceMeters / 1000.0
+        )
+    }
+}
+
+@Composable
+private fun NearbyCategoryButton(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(34.dp)
+            .border(
+                width = 1.dp,
+                color = Aw11Primary.copy(
+                    alpha =
+                        if (enabled) {
+                            0.55f
+                        } else {
+                            0.20f
+                        }
+                )
+            )
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color =
+                Aw11Primary.copy(
+                    alpha =
+                        if (enabled) {
+                            1f
+                        } else {
+                            0.35f
+                        }
+                ),
+            fontSize = 10.sp,
+            letterSpacing = 0.7.sp
         )
     }
 }
