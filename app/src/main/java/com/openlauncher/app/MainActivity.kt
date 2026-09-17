@@ -47,12 +47,78 @@ import com.openlauncher.app.ui.screen.aw11.Aw11Shell
 import com.openlauncher.app.ui.theme.Aw11Background
 import com.openlauncher.app.ui.theme.OpenLauncherTheme
 import com.openlauncher.app.viewmodel.LauncherViewModel
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.util.Log
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    private enum class CarPowerState {
+        ACTIVE,
+        GRACE_PERIOD,
+        PARKED
+    }
+
+    private var carPowerState: CarPowerState? = null
+    private var carPowerGraceJob: Job? = null
+
+    private companion object {
+        const val CAR_POWER_GRACE_PERIOD_MS =
+            45_000L
+
+        const val CAR_POWER_TAG =
+            "CarPower"
+    }
     private val vm: LauncherViewModel by viewModels()
     private var pendingMediaPackage: String? = null
     private var keepLocationInBackground = false
+
+    private var lastExternalPower: Boolean? = null
+
+    private val carPowerReceiver =
+        object : BroadcastReceiver() {
+
+            override fun onReceive(
+                context: Context,
+                intent: Intent
+            ) {
+                if (
+                    intent.action !=
+                    Intent.ACTION_BATTERY_CHANGED
+                ) {
+                    return
+                }
+
+                val plugged =
+                    intent.getIntExtra(
+                        BatteryManager.EXTRA_PLUGGED,
+                        0
+                    )
+
+                val externalPower =
+                    plugged != 0
+
+                if (
+                    lastExternalPower ==
+                    externalPower
+                ) {
+                    return
+                }
+
+                lastExternalPower =
+                    externalPower
+
+                handleExternalPowerChanged(
+                    externalPower
+                )
+            }
+        }
 
     private val overlayPermissionLauncher =
         registerForActivityResult(
@@ -112,6 +178,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        registerReceiver(
+            carPowerReceiver,
+            IntentFilter(
+                Intent.ACTION_BATTERY_CHANGED
+            )
+        )
+
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         )
@@ -514,4 +588,84 @@ class MainActivity : ComponentActivity() {
 
         vm.launchApp(mediaPackage)
     }
+    override fun onDestroy() {
+        unregisterReceiver(
+            carPowerReceiver
+        )
+        carPowerGraceJob?.cancel()
+        super.onDestroy()
+    }
+    private fun handleExternalPowerChanged(
+        externalPower: Boolean
+    ) {
+        if (externalPower) {
+            carPowerGraceJob?.cancel()
+            carPowerGraceJob = null
+
+            setCarPowerState(
+                CarPowerState.ACTIVE
+            )
+
+            return
+        }
+
+        if (
+            carPowerState ==
+            CarPowerState.GRACE_PERIOD ||
+            carPowerState ==
+            CarPowerState.PARKED
+        ) {
+            return
+        }
+
+        setCarPowerState(
+            CarPowerState.GRACE_PERIOD
+        )
+
+        carPowerGraceJob =
+            lifecycleScope.launch {
+
+                delay(
+                    CAR_POWER_GRACE_PERIOD_MS
+                )
+
+                setCarPowerState(
+                    CarPowerState.PARKED
+                )
+            }
+    }
+
+    private fun setCarPowerState(
+        state: CarPowerState
+    ) {
+        if (carPowerState == state) {
+            return
+        }
+
+        carPowerState = state
+
+        Log.i(
+            CAR_POWER_TAG,
+            "state=$state"
+        )
+
+        when (state) {
+
+            CarPowerState.ACTIVE,
+            CarPowerState.GRACE_PERIOD -> {
+                window.addFlags(
+                    WindowManager.LayoutParams
+                        .FLAG_KEEP_SCREEN_ON
+                )
+            }
+
+            CarPowerState.PARKED -> {
+                window.clearFlags(
+                    WindowManager.LayoutParams
+                        .FLAG_KEEP_SCREEN_ON
+                )
+            }
+        }
+    }
 }
+
