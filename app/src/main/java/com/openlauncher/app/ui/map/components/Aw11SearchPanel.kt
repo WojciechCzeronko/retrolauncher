@@ -56,6 +56,8 @@ import com.openlauncher.app.ui.theme.Aw11Background
 import com.openlauncher.app.ui.theme.Aw11Primary
 import com.openlauncher.app.ui.theme.Aw11Secondary
 import java.util.Locale
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 
 @Composable
 fun Aw11SearchPanel(
@@ -340,6 +342,14 @@ fun Aw11SearchPanel(
                 width = 1.dp,
                 color = Aw11Primary.copy(alpha = 0.85f)
             )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        // Consume taps inside the search panel
+                        // so they never reach the HERE MapView.
+                    }
+                )
+            }
             .padding(10.dp)
     ) {
         Row(

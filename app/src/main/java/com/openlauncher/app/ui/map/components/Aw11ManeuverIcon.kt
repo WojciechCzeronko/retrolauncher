@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import com.openlauncher.app.R
 import com.openlauncher.app.ui.theme.Aw11Primary
-import kotlin.math.abs
 
 @Composable
 fun Aw11ManeuverIcon(
@@ -121,12 +120,7 @@ private fun roundaboutIconResource(
 ): Int {
 
     if (roundaboutAngleDegrees != null) {
-
-        val angle =
-            abs(roundaboutAngleDegrees)
-
-        val rightDriving =
-            roundaboutAngleDegrees >= 0.0
+        val angle = roundaboutAngleDegrees
 
         return when {
             angle < -45.0 ->

@@ -85,8 +85,8 @@ fun Aw11DemoControls(
         ) {
             listOf(
                 1.0,
-                2.0,
-                4.0
+                4.0,
+                8.0
             ).forEach { multiplier ->
 
                 DemoButton(

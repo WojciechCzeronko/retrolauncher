@@ -148,8 +148,7 @@ class ManeuverProgressTracker {
                         instruction =
                             maneuver.text.trim(),
                         roundaboutAngleDegrees =
-                            maneuver.roundaboutAngleInDegrees
-                                ?: geometryRoundaboutAngle,
+                            geometryRoundaboutAngle,
                         distanceAlongGeometryMeters =
                             cumulativeDistances[
                                 closestVertexIndex
