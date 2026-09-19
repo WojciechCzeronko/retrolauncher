@@ -1,5 +1,7 @@
 package com.openlauncher.app.ui.components
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,10 +22,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.openlauncher.app.R
+import com.openlauncher.app.model.NavDestination
 import com.openlauncher.app.ui.theme.Aw11Border
 import com.openlauncher.app.ui.theme.Aw11Dim
 import com.openlauncher.app.ui.theme.Aw11DisplayGlow
@@ -42,6 +50,7 @@ fun Aw11ControlPanel(
     onMedia: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
+    currentDest: NavDestination,
     modifier: Modifier = Modifier
 ) {
     var now by remember {
@@ -149,23 +158,31 @@ fun Aw11ControlPanel(
                 Arrangement.spacedBy(6.dp)
         ) {
             Aw11ControlButton(
+                iconRes = R.drawable.ic_aw11_nav,
                 label = "NAV",
+                isActive = currentDest == NavDestination.HOME,
                 onClick = onNav
             )
 
             Aw11ControlButton(
+                iconRes = R.drawable.ic_aw11_media,
                 label = "MEDIA",
                 enabled = mediaAvailable,
+                isActive = false,
                 onClick = onMedia
             )
 
             Aw11ControlButton(
+                iconRes = R.drawable.ic_aw11_apps,
                 label = "APPS",
+                isActive = currentDest == NavDestination.APP_LIBRARY,
                 onClick = onApps
             )
 
             Aw11ControlButton(
+                iconRes = R.drawable.ic_aw11_settings,
                 label = "SETTINGS",
+                isActive = currentDest == NavDestination.SETTINGS,
                 onClick = onSettings
             )
         }
@@ -198,46 +215,74 @@ fun Aw11ControlPanel(
 
 @Composable
 private fun Aw11ControlButton(
+    iconRes: Int,
     label: String,
     enabled: Boolean = true,
+    isActive: Boolean = false,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(72.dp)
+            .background(
+                if (isActive) {
+                    Aw11Primary.copy(alpha = 0.06f)
+                } else {
+                    Color.Transparent
+                }
+            )
             .border(
                 width = 1.dp,
-                color =
-                    Aw11Border.copy(
-                        alpha =
-                            if (enabled) {
-                                0.65f
-                            } else {
-                                0.30f
-                            }
-                    )
+                color = when {
+                    !enabled ->
+                        Aw11Border.copy(alpha = 0.25f)
+
+                    isActive ->
+                        Aw11Primary.copy(alpha = 0.95f)
+
+                    else ->
+                        Aw11Border.copy(alpha = 0.50f)
+                }
             )
             .clickable(
                 enabled = enabled,
                 onClick = onClick
-            )
-            .padding(
-                horizontal = 10.dp
             ),
-        contentAlignment =
-            Alignment.CenterStart
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "> $label",
-            color =
-                if (enabled) {
-                    Aw11Primary
-                } else {
-                    Aw11Dim
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(iconRes),
+                contentDescription = label,
+                modifier = Modifier
+                    .size(42.dp)
+                    .alpha(
+                        when {
+                            !enabled -> 0.25f
+                            isActive -> 1f
+                            else -> 0.55f
+                        }
+                    )
+            )
+
+            Spacer(
+                Modifier.height(3.dp)
+            )
+
+            Text(
+                text = label,
+                color = when {
+                    !enabled -> Aw11Dim
+                    isActive -> Aw11Primary
+                    else -> Aw11Secondary
                 },
-            fontSize = 11.sp,
-            letterSpacing = 0.5.sp
-        )
+                fontSize = 10.sp,
+                letterSpacing = 0.7.sp
+            )
+        }
     }
 }

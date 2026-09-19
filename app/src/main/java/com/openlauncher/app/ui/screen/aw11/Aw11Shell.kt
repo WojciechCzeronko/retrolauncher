@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.openlauncher.app.ui.components.Aw11ControlPanel
 import com.openlauncher.app.ui.theme.Aw11Border
+import com.openlauncher.app.model.NavDestination
 
 @Composable
 internal fun Aw11Shell(
@@ -24,6 +25,7 @@ internal fun Aw11Shell(
     onMedia: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
+    currentDest: NavDestination,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -53,7 +55,9 @@ internal fun Aw11Shell(
                     onNav = onNav,
                     onMedia = onMedia,
                     onApps = onApps,
+                    currentDest = currentDest,
                     onSettings = onSettings
+
                 )
             }
 

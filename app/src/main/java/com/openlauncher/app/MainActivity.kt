@@ -442,6 +442,7 @@ class MainActivity : ComponentActivity() {
                                         NavDestination.APP_LIBRARY
                                     )
                                 },
+                                currentDest = nav,
                                 onSettings = {
                                     searchOpenRequestId = 0
 
@@ -652,15 +653,9 @@ class MainActivity : ComponentActivity() {
         when (state) {
 
             CarPowerState.ACTIVE,
-            CarPowerState.GRACE_PERIOD -> {
-                window.addFlags(
-                    WindowManager.LayoutParams
-                        .FLAG_KEEP_SCREEN_ON
-                )
-            }
-
+            CarPowerState.GRACE_PERIOD,
             CarPowerState.PARKED -> {
-                window.clearFlags(
+                window.addFlags(
                     WindowManager.LayoutParams
                         .FLAG_KEEP_SCREEN_ON
                 )
