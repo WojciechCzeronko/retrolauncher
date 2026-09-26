@@ -46,6 +46,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.usb.host"
+        android:required="true" />
+
     <!-- Required on API 30+ so PackageManager returns ALL launcher apps -->
     <queries>
         <intent>

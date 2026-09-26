@@ -41,6 +41,8 @@ import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 
 @Composable
 fun Aw11ControlPanel(
@@ -50,6 +52,7 @@ fun Aw11ControlPanel(
     onMedia: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
+    onCamera: () -> Unit,
     currentDest: NavDestination,
     modifier: Modifier = Modifier
 ) {
@@ -165,6 +168,12 @@ fun Aw11ControlPanel(
             )
 
             Aw11ControlButton(
+                iconRes = R.drawable.ic_aw11_camera,
+                label = "CAMERA",
+                isActive = currentDest == NavDestination.CAMERA,
+                onClick = onCamera
+            )
+            Aw11ControlButton(
                 iconRes = R.drawable.ic_aw11_media,
                 label = "MEDIA",
                 enabled = mediaAvailable,
@@ -213,12 +222,14 @@ fun Aw11ControlPanel(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Aw11ControlButton(
     iconRes: Int,
     label: String,
     enabled: Boolean = true,
     isActive: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     Box(
@@ -245,9 +256,10 @@ private fun Aw11ControlButton(
                         Aw11Border.copy(alpha = 0.50f)
                 }
             )
-            .clickable(
+            .combinedClickable(
                 enabled = enabled,
-                onClick = onClick
+                onClick = onClick,
+                onLongClick = onLongClick
             ),
         contentAlignment = Alignment.Center
     ) {

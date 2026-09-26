@@ -115,5 +115,13 @@ dependencies {
     // JSON serialization
     implementation("com.google.code.gson:gson:2.13.1")
 
+    implementation(
+        "com.github.WojciechCzeronko.AndroidUSBCamera:libausbc:3.6.0-lowlatency1"
+    )
+
+    implementation(
+        "com.github.WojciechCzeronko.AndroidUSBCamera:libuvc:3.6.0-lowlatency1"
+    )
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

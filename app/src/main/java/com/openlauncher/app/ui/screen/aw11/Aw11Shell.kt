@@ -25,6 +25,7 @@ internal fun Aw11Shell(
     onMedia: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
+    onCamera: () -> Unit,
     currentDest: NavDestination,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit
@@ -53,11 +54,11 @@ internal fun Aw11Shell(
                     hasGps = hasGps,
                     mediaAvailable = mediaAvailable,
                     onNav = onNav,
+                    onCamera = onCamera,
                     onMedia = onMedia,
                     onApps = onApps,
                     currentDest = currentDest,
                     onSettings = onSettings
-
                 )
             }
 
@@ -73,10 +74,12 @@ internal fun Aw11Shell(
             )
         }
 
-        Aw11DisplayOverlay(
-            modifier = Modifier
-                .matchParentSize()
-                .zIndex(100f)
-        )
+        if (currentDest != NavDestination.CAMERA) {
+            Aw11DisplayOverlay(
+                modifier = Modifier
+                    .matchParentSize()
+                    .zIndex(100f)
+            )
+        }
     }
 }

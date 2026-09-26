@@ -53,6 +53,7 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.util.Log
 import androidx.lifecycle.lifecycleScope
+import com.openlauncher.app.ui.screen.ReverseCameraScreen
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -344,6 +345,12 @@ class MainActivity : ComponentActivity() {
                                     when (nav) {
                                         NavDestination.HOME -> Unit
 
+                                        NavDestination.CAMERA -> {
+                                            ReverseCameraScreen(
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        }
+
                                         NavDestination.APP_LIBRARY -> {
                                             AppLibraryScreen(
                                                 apps = apps,
@@ -411,16 +418,20 @@ class MainActivity : ComponentActivity() {
                                         .isNullOrBlank()
                                         .not(),
                                 onNav = {
-                                    if (
-                                        nav == NavDestination.HOME
-                                    ) {
-                                        searchOpenRequestId++
-                                    } else {
-                                        searchOpenRequestId = 0
+                                    when (nav) {
+                                        NavDestination.CAMERA -> {
+                                            searchOpenRequestId = 0
+                                            vm.navigate(NavDestination.HOME)
+                                        }
 
-                                        vm.navigate(
-                                            NavDestination.HOME
-                                        )
+                                        NavDestination.HOME -> {
+                                            searchOpenRequestId++
+                                        }
+
+                                        else -> {
+                                            searchOpenRequestId = 0
+                                            vm.navigate(NavDestination.HOME)
+                                        }
                                     }
                                 },
                                 onMedia = {
@@ -449,7 +460,14 @@ class MainActivity : ComponentActivity() {
                                     vm.navigate(
                                         NavDestination.SETTINGS
                                     )
-                                }
+                                },
+                                onCamera = {
+                                    searchOpenRequestId = 0
+
+                                    vm.navigate(
+                                        NavDestination.CAMERA
+                                    )
+                                },
                             ) {
                                 mainPane(
                                     Modifier.fillMaxSize()
