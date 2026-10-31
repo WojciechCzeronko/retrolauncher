@@ -57,6 +57,21 @@ import com.openlauncher.app.ui.screen.ReverseCameraScreen
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.view.KeyEvent
+import com.openlauncher.app.service.CarControlAccessibilityService
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import android.os.SystemClock
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 
 class MainActivity : ComponentActivity() {
 
@@ -66,6 +81,13 @@ class MainActivity : ComponentActivity() {
         PARKED
     }
 
+    private val hereSdkReady = mutableStateOf(false)
+    private var hereSdkInitStarted = false
+
+    private var reverseKeyActive = false
+
+    private var destinationBeforeReverse =
+        NavDestination.HOME
     private var carPowerState: CarPowerState? = null
     private var carPowerGraceJob: Job? = null
 
@@ -75,6 +97,8 @@ class MainActivity : ComponentActivity() {
 
         const val CAR_POWER_TAG =
             "CarPower"
+
+        const val STARTUP_TAG = "RetroStartup"
     }
     private val vm: LauncherViewModel by viewModels()
     private var pendingMediaPackage: String? = null
@@ -177,6 +201,61 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) hideSystemBars()
     }
 
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent
+    ): Boolean {
+        if (
+            keyCode == KeyEvent.KEYCODE_F12 &&
+            event.repeatCount == 0
+        ) {
+            if (!reverseKeyActive) {
+                reverseKeyActive = true
+
+                destinationBeforeReverse =
+                    vm.nav.value
+
+                vm.navigate(
+                    NavDestination.CAMERA
+                )
+            }
+
+            return true
+        }
+
+        return super.onKeyDown(
+            keyCode,
+            event
+        )
+    }
+
+    override fun onKeyUp(
+        keyCode: Int,
+        event: KeyEvent
+    ): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_F12) {
+            if (reverseKeyActive) {
+                reverseKeyActive = false
+
+                // Restore the previous screen only if the reverse camera
+                // is still displayed. If the user manually navigated away,
+                // do not override their choice.
+                if (vm.nav.value == NavDestination.CAMERA) {
+                    vm.navigate(
+                        destinationBeforeReverse
+                    )
+                }
+            }
+
+            return true
+        }
+
+        return super.onKeyUp(
+            keyCode,
+            event
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -190,17 +269,43 @@ class MainActivity : ComponentActivity() {
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         )
-        initializeHereSdk()
 
         hideSystemBars()
 
         setContent {
             val settingsLoaded by vm.settingsLoaded.collectAsStateWithLifecycle()
+            LaunchedEffect(settingsLoaded) {
+                if (settingsLoaded) {
+                    Log.i(
+                        STARTUP_TAG,
+                        "SETTINGS_LOADED"
+                    )
+                }
+            }
+            LaunchedEffect(settingsLoaded) {
+                if (
+                    settingsLoaded &&
+                    !hereSdkInitStarted &&
+                    !hereSdkReady.value
+                ) {
+                    // Pozwól Compose przygotować pierwszą klatkę.
+                    withFrameNanos { }
+
+                    // Daj SurfaceFlingerowi chwilę na faktyczne pokazanie klatki.
+                    delay(100)
+
+                    startHereSdkInitialization()
+                }
+            }
             val settings by vm.settings.collectAsStateWithLifecycle()
             val nav by vm.nav.collectAsStateWithLifecycle()
             var searchOpenRequestId by remember {
                 mutableIntStateOf(0)
             }
+            val carControlConnected by
+            CarControlAccessibilityService
+                .isConnected
+                .collectAsStateWithLifecycle()
             val apps by vm.apps.collectAsStateWithLifecycle()
             val appsLoading by vm.appsLoading.collectAsStateWithLifecycle()
             val nowPlaying by vm.nowPlaying.collectAsStateWithLifecycle()
@@ -221,19 +326,19 @@ class MainActivity : ComponentActivity() {
             val bgBrush = if (settings.useCustomBackgroundColor && settings.useGradient) {
                 val colors = listOf(bg, bgGradientEnd)
                 when (settings.gradientDirection) {
-                    GradientDirection.TOP_TO_BOTTOM -> androidx.compose.ui.graphics.Brush.verticalGradient(
+                    GradientDirection.TOP_TO_BOTTOM -> Brush.verticalGradient(
                         colors
                     )
 
-                    GradientDirection.LEFT_TO_RIGHT -> androidx.compose.ui.graphics.Brush.horizontalGradient(
+                    GradientDirection.LEFT_TO_RIGHT -> Brush.horizontalGradient(
                         colors
                     )
 
-                    GradientDirection.DIAGONAL -> androidx.compose.ui.graphics.Brush.linearGradient(
+                    GradientDirection.DIAGONAL -> Brush.linearGradient(
                         colors
                     )
 
-                    GradientDirection.RADIAL -> androidx.compose.ui.graphics.Brush.radialGradient(
+                    GradientDirection.RADIAL -> Brush.radialGradient(
                         colors
                     )
                 }
@@ -247,11 +352,31 @@ class MainActivity : ComponentActivity() {
                 )
             ) {
                 if (!settingsLoaded) {
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black)
-                    )
+                            .background(Aw11Background)
+                    ) {
+
+                        Aw11Shell(
+                            hasGps = false,
+                            mediaAvailable = false,
+                            onNav = {},
+                            onMedia = {},
+                            onApps = {},
+                            onSettings = {},
+                            currentDest = NavDestination.HOME,
+                            onCamera = {}
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Aw11Background)
+                            )
+                        }
+                    }
+
                 } else OpenLauncherTheme(
                     accent = accent,
                     background = bg,
@@ -278,9 +403,9 @@ class MainActivity : ComponentActivity() {
                             // Optional wallpaper layer
                             if (settings.wallpaperUri.isNotEmpty()) {
                                 AsyncImage(
-                                    model = android.net.Uri.parse(settings.wallpaperUri),
+                                    model = Uri.parse(settings.wallpaperUri),
                                     contentDescription = null,
-                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
                                 Box(
@@ -298,6 +423,7 @@ class MainActivity : ComponentActivity() {
                                     // This preserves the HERE MapView and the active guidance session.
                                     HomeScreen(
                                         settings = settings,
+                                        hereSdkReady = hereSdkReady.value,
                                         nowPlaying = nowPlaying,
                                         location = location,
                                         tripData = tripData,
@@ -473,6 +599,35 @@ class MainActivity : ComponentActivity() {
                                     Modifier.fillMaxSize()
                                 )
                             }
+
+                            // Accessibility warning must be the last element
+// so it is drawn above the entire launcher UI.
+                            if (!carControlConnected) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopCenter)
+                                        .zIndex(100f)
+                                        .fillMaxWidth()
+                                        .background(
+                                            Color(0xFF8B0000)
+                                        )
+                                        .clickable {
+                                            startActivity(
+                                                Intent(
+                                                    Settings.ACTION_ACCESSIBILITY_SETTINGS
+                                                )
+                                            )
+                                        }
+                                        .padding(12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text =
+                                            "CAR CONTROL ACCESSIBILITY NOT ACTIVE — TAP TO FIX",
+                                        color = Color.White
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -543,6 +698,44 @@ class MainActivity : ComponentActivity() {
         } catch (e: InstantiationErrorException) {
             throw RuntimeException(
                 "HERE SDK initialization failed: ${e.error.name}"
+            )
+        }
+    }
+
+    private fun startHereSdkInitialization() {
+        if (
+            hereSdkInitStarted ||
+            hereSdkReady.value
+        ) {
+            return
+        }
+
+        hereSdkInitStarted = true
+
+        val startedAt =
+            SystemClock.elapsedRealtime()
+
+        Log.i(
+            STARTUP_TAG,
+            "HERE_INIT_START"
+        )
+
+        try {
+            initializeHereSdk()
+
+            hereSdkReady.value = true
+
+            Log.i(
+                STARTUP_TAG,
+                "HERE_INIT_DONE duration=${
+                    SystemClock.elapsedRealtime() - startedAt
+                }ms"
+            )
+        } catch (t: Throwable) {
+            Log.e(
+                STARTUP_TAG,
+                "HERE_INIT_FAILED",
+                t
             )
         }
     }

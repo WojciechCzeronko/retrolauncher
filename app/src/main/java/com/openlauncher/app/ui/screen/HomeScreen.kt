@@ -12,6 +12,7 @@ import com.openlauncher.app.viewmodel.TripData
 @Composable
 fun HomeScreen(
     settings: AppSettings,
+    hereSdkReady: Boolean,
     nowPlaying: NowPlayingState?,
     location: LocationData?,
     tripData: TripData,
@@ -25,6 +26,7 @@ fun HomeScreen(
 ) {
     Aw11HomeLayout(
         settings = settings,
+        hereSdkReady = hereSdkReady,
         location = location,
         tripData = tripData,
         onResetTrip = onResetTrip,

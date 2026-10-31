@@ -30,6 +30,8 @@ import com.openlauncher.app.ui.theme.Aw11Border
 import com.openlauncher.app.util.LocationData
 import com.openlauncher.app.viewmodel.TripData
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.background
+import com.openlauncher.app.ui.theme.Aw11Background
 
 private enum class StartupPhase {
     SEGMENT_TEST,
@@ -41,6 +43,7 @@ private enum class StartupPhase {
 @Composable
 internal fun Aw11HomeLayout(
     settings: AppSettings,
+    hereSdkReady: Boolean,
     location: LocationData?,
     tripData: TripData,
     onResetTrip: () -> Unit,
@@ -175,24 +178,32 @@ internal fun Aw11HomeLayout(
                     )
                 )
         ) {
-            Aw11HereMap(
-                location = location,
-                settings = settings,
-                openSearchRequestId =
-                    openSearchRequestId,
-                onDemoDataChanged = { demoLocation,
-                                      demoTripData ->
+            if (hereSdkReady) {
+                Aw11HereMap(
+                    location = location,
+                    settings = settings,
+                    openSearchRequestId =
+                        openSearchRequestId,
+                    onDemoDataChanged = { demoLocation,
+                                          demoTripData ->
 
-                    demoDisplayLocation =
-                        demoLocation
+                        demoDisplayLocation =
+                            demoLocation
 
-                    demoDisplayTripData =
-                        demoTripData
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(1.dp)
-            )
+                        demoDisplayTripData =
+                            demoTripData
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(1.dp)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Aw11Background)
+                )
+            }
         }
 
         Spacer(
